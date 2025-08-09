@@ -2,142 +2,121 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Spinner Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grow a Garden Spinner</title>
 <style>
   body {
-    background: radial-gradient(circle, #222, #111);
-    color: white;
-    text-align: center;
+    background: #e8f5e9;
     font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
   }
   h1 {
     margin-top: 20px;
   }
-  #wheelCanvas {
-    background: #333;
-    border-radius: 50%;
-    margin-top: 20px;
-    box-shadow: 0 0 20px rgba(255,255,255,0.3);
+  .spinner-container {
+    position: relative;
+    width: 80%;
+    margin: 50px auto;
+    overflow: hidden;
+    border: 5px solid #4caf50;
+    border-radius: 10px;
+    background: white;
+    height: 120px;
+  }
+  .spinner {
+    display: flex;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+  }
+  .reward {
+    flex: 0 0 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    border-right: 2px solid #ccc;
+    background: #f9fff9;
+  }
+  .arrow {
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 40px;
+    color: red;
   }
   button {
+    padding: 15px 30px;
     margin-top: 20px;
-    padding: 10px 20px;
     font-size: 18px;
     border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    background: linear-gradient(90deg, #ff8800, #ffaa00);
+    background: #4caf50;
     color: white;
-    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
   }
-  #result {
-    margin-top: 20px;
-    font-size: 20px;
-    color: #ffeb3b;
+  button:hover {
+    background: #45a049;
   }
 </style>
 </head>
 <body>
 
-<h1>🎡 Cool Reward Spinner</h1>
-<canvas id="wheelCanvas" width="400" height="400"></canvas><br>
-<button id="spinBtn">SPIN</button>
-<div id="result"></div>
+<h1>🌱 Grow a Garden Seed Spinner 🌱</h1>
+<div class="spinner-container">
+  <div class="arrow">⬇️</div>
+  <div class="spinner" id="spinner"></div>
+</div>
+
+<button onclick="spin()">Spin!</button>
+
+<p id="result"></p>
 
 <script>
-const canvas = document.getElementById('wheelCanvas');
-const ctx = canvas.getContext('2d');
-const spinBtn = document.getElementById('spinBtn');
-const resultDiv = document.getElementById('result');
+const rewards = ["🌽 Corn Seed", "🍓 Strawberry Seed", "🍅 Tomato Seed", "🥕 Carrot Seed", "🍉 Watermelon Seed", "🌻 Sunflower Seed", "🍎 Apple Seed", "🥔 Potato Seed"];
 
-// Rewards setup
-const rewards = [
-  { text: "💰 100 Coins", color: "#ff5722" },
-  { text: "💎 50 Gems", color: "#3f51b5" },
-  { text: "⭐ Epic Sword", color: "#9c27b0" },
-  { text: "🍀 Lucky Charm", color: "#4caf50" },
-  { text: "🔥 Fire Skin", color: "#f44336" },
-  { text: "🎟 Bonus Ticket", color: "#009688" },
-  { text: "💰 500 Coins", color: "#ff9800" },
-  { text: "👑 Legendary Crown", color: "#ffeb3b" }
-];
-const numSegments = rewards.length;
-const segmentAngle = 2 * Math.PI / numSegments;
-
-let currentAngle = 0;
-let spinning = false;
-let spinSpeed = 0;
-let spinAcceleration = 0;
-
-// Draw the wheel
-function drawWheel() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const radius = canvas.width / 2;
-  
-  for (let i = 0; i < numSegments; i++) {
-    const angleStart = currentAngle + i * segmentAngle;
-    ctx.beginPath();
-    ctx.moveTo(radius, radius);
-    ctx.arc(radius, radius, radius, angleStart, angleStart + segmentAngle);
-    ctx.fillStyle = rewards[i].color;
-    ctx.fill();
-    ctx.save();
-    ctx.translate(radius, radius);
-    ctx.rotate(angleStart + segmentAngle / 2);
-    ctx.textAlign = "right";
-    ctx.fillStyle = "#fff";
-    ctx.font = "16px Arial";
-    ctx.fillText(rewards[i].text, radius - 10, 5);
-    ctx.restore();
-  }
-  
-  // Draw center circle
-  ctx.beginPath();
-  ctx.arc(radius, radius, 40, 0, 2 * Math.PI);
-  ctx.fillStyle = "#222";
-  ctx.fill();
-  
-  // Draw pointer
-  ctx.beginPath();
-  ctx.moveTo(radius, radius - radius + 5);
-  ctx.lineTo(radius - 15, radius - radius + 40);
-  ctx.lineTo(radius + 15, radius - radius + 40);
-  ctx.closePath();
-  ctx.fillStyle = "#ffeb3b";
-  ctx.fill();
+// Fill spinner with rewards (repeated to simulate continuous scroll)
+const spinner = document.getElementById("spinner");
+for (let i = 0; i < 20; i++) {
+  const rewardDiv = document.createElement("div");
+  rewardDiv.className = "reward";
+  rewardDiv.textContent = rewards[i % rewards.length];
+  spinner.appendChild(rewardDiv);
 }
 
-function spinWheel() {
+let spinning = false;
+
+function spin() {
   if (spinning) return;
   spinning = true;
-  resultDiv.textContent = "";
-  spinSpeed = Math.random() * 0.3 + 0.25;
-  spinAcceleration = 0.002;
-  animate();
-}
 
-function animate() {
-  if (!spinning) return;
-  
-  currentAngle += spinSpeed;
-  spinSpeed -= spinAcceleration;
-  
-  if (spinSpeed <= 0) {
-    spinning = false;
-    // Determine reward
-    const degrees = currentAngle * 180 / Math.PI + 90;
-    const index = Math.floor(numSegments - (degrees % 360) / (360 / numSegments)) % numSegments;
-    resultDiv.textContent = `🎉 You won: ${rewards[index].text}!`;
-    return;
-  }
-  
-  drawWheel();
-  requestAnimationFrame(animate);
-}
+  let position = 0;
+  let speed = 50; // initial fast speed
+  const spinInterval = setInterval(() => {
+    position -= speed;
+    if (position <= -120) {
+      position = 0;
+      spinner.appendChild(spinner.firstElementChild);
+    } else {
+      spinner.style.transform = `translateX(${position}px)`;
+    }
 
-// Initial draw
-drawWheel();
-spinBtn.addEventListener("click", spinWheel);
+    // Slow down
+    if (speed > 5) {
+      speed *= 0.97;
+    } else {
+      clearInterval(spinInterval);
+      spinning = false;
+      // Pick the middle item as winner
+      const winner = spinner.children[3].textContent;
+      document.getElementById("result").textContent = `You won: ${winner}! 🎉`;
+    }
+  }, 20);
+}
 </script>
 
 </body>
