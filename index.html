@@ -1,321 +1,144 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Grow a Garden — Mini HTML Game</title>
-  <style>
-    :root{--bg:#e9f7e9;--card:#ffffff;--accent:#67b26f;--muted:#6b6b6b}
-    *{box-sizing:border-box;font-family:Inter,system-ui,Helvetica,Arial,sans-serif}
-    body{margin:0;background:linear-gradient(180deg,#cfead0,#e9f7e9);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-    .container{width:100%;max-width:980px;background:var(--card);border-radius:12px;box-shadow:0 10px 30px rgba(20,40,20,0.12);overflow:hidden;display:grid;grid-template-columns:1fr 320px}
-    header{grid-column:1/-1;padding:14px 18px;background:linear-gradient(90deg,#f8fff8,#eef8ee);display:flex;align-items:center;justify-content:space-between}
-    header h1{margin:0;font-size:18px;color:var(--accent)}
-    header .stats{display:flex;gap:12px;align-items:center}
-    .coins{background:#fff;border-radius:8px;padding:6px 10px;display:flex;gap:8px;align-items:center;border:1px solid #eee}
-    main{padding:18px;display:flex;gap:18px}
-    .garden{flex:1;background:linear-gradient(180deg,#ddf6dd,#f7fff7);padding:12px;border-radius:10px;border:1px solid #e6f0e6}
-    .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
-    .plot{background:linear-gradient(180deg,#8aa17a,#6f8f62);height:84px;border-radius:8px;position:relative;overflow:hidden;cursor:pointer;border:2px solid rgba(255,255,255,0.06)}
-    .soil{position:absolute;inset:0;background:linear-gradient(180deg,#6a4d33,#513822);display:flex;align-items:flex-end;padding:8px;justify-content:center}
-    .plant{pointer-events:none;transition:transform .3s ease,opacity .2s;transform-origin:center bottom;text-align:center;color:#fff;font-weight:700;text-shadow:0 2px 0 rgba(0,0,0,0.25)}
-    .plant.stage-0{opacity:0}
-    .plant.stage-1{transform:translateY(8px) scale(0.6);opacity:1;font-size:20px}
-    .plant.stage-2{transform:translateY(0) scale(1);font-size:28px}
-    .plant.stage-3{transform:translateY(-6px) scale(1.25);font-size:34px}
-    .controls{width:320px;padding:12px;border-left:1px solid #f0f5f0;background:linear-gradient(180deg,#fbfff9,#f6fff3)}
-    .panel{background:var(--card);padding:10px;border-radius:8px;margin-bottom:12px;border:1px solid #f0f4f0}
-    .panel h3{margin:0 0 8px 0;font-size:14px;color:var(--muted)}
-    button{appearance:none;border:0;background:var(--accent);color:white;padding:8px 10px;border-radius:8px;font-weight:600;cursor:pointer}
-    .small{padding:6px 8px;font-size:13px}
-    .seed-list{display:flex;flex-direction:column;gap:8px}
-    .seed{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;border:1px solid #eef6ee;background:linear-gradient(#fff,#f7fff7)}
-    .seed button{background:transparent;color:var(--accent);border:1px solid var(--accent);padding:6px 8px}
-    .toolbar{display:flex;gap:8px;justify-content:space-between}
-    .message{font-size:13px;color:#2b7a3a}
-    .shop-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;border:1px dashed #e3efe3}
-    .progress{height:8px;background:#e7f3ea;border-radius:6px;overflow:hidden}
-    .progress > i{display:block;height:100%;background:linear-gradient(90deg,#6fcf97,#2b8e61);width:0}
-    footer{grid-column:1/-1;padding:10px 18px;background:#f7fff7;color:#2b7a3a;font-size:13px}
-    .legend{display:flex;gap:8px;align-items:center}
-    .btn-row{display:flex;gap:8px;margin-top:8px}
-    @media(max-width:880px){.container{grid-template-columns:1fr}.controls{width:100%}.garden{order:2}}
-  </style>
+<meta charset="UTF-8">
+<title>Spinner Game</title>
+<style>
+  body {
+    background: radial-gradient(circle, #222, #111);
+    color: white;
+    text-align: center;
+    font-family: Arial, sans-serif;
+  }
+  h1 {
+    margin-top: 20px;
+  }
+  #wheelCanvas {
+    background: #333;
+    border-radius: 50%;
+    margin-top: 20px;
+    box-shadow: 0 0 20px rgba(255,255,255,0.3);
+  }
+  button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: linear-gradient(90deg, #ff8800, #ffaa00);
+    color: white;
+    font-weight: bold;
+  }
+  #result {
+    margin-top: 20px;
+    font-size: 20px;
+    color: #ffeb3b;
+  }
+</style>
 </head>
 <body>
-  <div class="container" role="application">
-    <header>
-      <h1>🌱 Grow a Garden</h1>
-      <div class="stats">
-        <div class="coins">💰 <span id="coins">0</span></div>
-        <div class="message" id="msg">Click a plot to plant a seed</div>
-      </div>
-    </header>
 
-    <main>
-      <section class="garden">
-        <div class="panel" style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <strong>Day:</strong> <span id="day">1</span>
-          </div>
-          <div style="width:45%">
-            <div class="progress"><i id="dayProgress"></i></div>
-          </div>
-        </div>
+<h1>🎡 Cool Reward Spinner</h1>
+<canvas id="wheelCanvas" width="400" height="400"></canvas><br>
+<button id="spinBtn">SPIN</button>
+<div id="result"></div>
 
-        <div class="grid" id="grid"></div>
+<script>
+const canvas = document.getElementById('wheelCanvas');
+const ctx = canvas.getContext('2d');
+const spinBtn = document.getElementById('spinBtn');
+const resultDiv = document.getElementById('result');
 
-        <div style="margin-top:10px;display:flex;gap:8px;justify-content:space-between;align-items:center">
-          <div>Tips: Water plants to speed growth 🌧️. Harvest when mature.</div>
-          <div class="legend"><small>Plots: <strong id="occupied">0/20</strong></small></div>
-        </div>
-      </section>
+// Rewards setup
+const rewards = [
+  { text: "💰 100 Coins", color: "#ff5722" },
+  { text: "💎 50 Gems", color: "#3f51b5" },
+  { text: "⭐ Epic Sword", color: "#9c27b0" },
+  { text: "🍀 Lucky Charm", color: "#4caf50" },
+  { text: "🔥 Fire Skin", color: "#f44336" },
+  { text: "🎟 Bonus Ticket", color: "#009688" },
+  { text: "💰 500 Coins", color: "#ff9800" },
+  { text: "👑 Legendary Crown", color: "#ffeb3b" }
+];
+const numSegments = rewards.length;
+const segmentAngle = 2 * Math.PI / numSegments;
 
-      <aside class="controls">
-        <div class="panel">
-          <h3>Seeds</h3>
-          <div class="seed-list" id="seedList"></div>
-        </div>
+let currentAngle = 0;
+let spinning = false;
+let spinSpeed = 0;
+let spinAcceleration = 0;
 
-        <div class="panel">
-          <h3>Actions</h3>
-          <div class="toolbar">
-            <button id="waterBtn" class="small">Water 💧</button>
-            <button id="harvestAll" class="small">Harvest All ✂️</button>
-            <button id="clearAll" class="small">Clear Dead 🧹</button>
-          </div>
-          <div class="btn-row">
-            <button id="buyPlot" class="small">Buy Plot (10)</button>
-            <button id="expandGrid" class="small">+5 Plots (free)</button>
-          </div>
-        </div>
+// Draw the wheel
+function drawWheel() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const radius = canvas.width / 2;
+  
+  for (let i = 0; i < numSegments; i++) {
+    const angleStart = currentAngle + i * segmentAngle;
+    ctx.beginPath();
+    ctx.moveTo(radius, radius);
+    ctx.arc(radius, radius, radius, angleStart, angleStart + segmentAngle);
+    ctx.fillStyle = rewards[i].color;
+    ctx.fill();
+    ctx.save();
+    ctx.translate(radius, radius);
+    ctx.rotate(angleStart + segmentAngle / 2);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#fff";
+    ctx.font = "16px Arial";
+    ctx.fillText(rewards[i].text, radius - 10, 5);
+    ctx.restore();
+  }
+  
+  // Draw center circle
+  ctx.beginPath();
+  ctx.arc(radius, radius, 40, 0, 2 * Math.PI);
+  ctx.fillStyle = "#222";
+  ctx.fill();
+  
+  // Draw pointer
+  ctx.beginPath();
+  ctx.moveTo(radius, radius - radius + 5);
+  ctx.lineTo(radius - 15, radius - radius + 40);
+  ctx.lineTo(radius + 15, radius - radius + 40);
+  ctx.closePath();
+  ctx.fillStyle = "#ffeb3b";
+  ctx.fill();
+}
 
-        <div class="panel">
-          <h3>Shop</h3>
-          <div id="shop"></div>
-        </div>
+function spinWheel() {
+  if (spinning) return;
+  spinning = true;
+  resultDiv.textContent = "";
+  spinSpeed = Math.random() * 0.3 + 0.25;
+  spinAcceleration = 0.002;
+  animate();
+}
 
-        <div class="panel">
-          <h3>Save</h3>
-          <div style="display:flex;gap:6px">
-            <button id="saveBtn" class="small">Save</button>
-            <button id="loadBtn" class="small">Load</button>
-            <button id="resetBtn" class="small">Reset</button>
-          </div>
-        </div>
-      </aside>
-    </main>
+function animate() {
+  if (!spinning) return;
+  
+  currentAngle += spinSpeed;
+  spinSpeed -= spinAcceleration;
+  
+  if (spinSpeed <= 0) {
+    spinning = false;
+    // Determine reward
+    const degrees = currentAngle * 180 / Math.PI + 90;
+    const index = Math.floor(numSegments - (degrees % 360) / (360 / numSegments)) % numSegments;
+    resultDiv.textContent = `🎉 You won: ${rewards[index].text}!`;
+    return;
+  }
+  
+  drawWheel();
+  requestAnimationFrame(animate);
+}
 
-    <footer>Made with ❤️ — Click any plot to plant. Use the shop to buy seeds & upgrades.</footer>
-  </div>
+// Initial draw
+drawWheel();
+spinBtn.addEventListener("click", spinWheel);
+</script>
 
-  <script>
-    // --- Game data ---
-    const state = {
-      coins: 20,
-      day: 1,
-      dayTick: 0, // progress through day (0-100)
-      plots: 20,
-      gridCount: 20,
-      seedsOwned: {carrot:5,tomato:2,sunflower:1},
-      plotsState: [],
-      upgrades: {waterBoost:1}
-    };
-
-    const SEEDS = {
-      carrot: {name:'Carrot',emoji:'🥕',growTime:8,reward:4,price:2},
-      tomato: {name:'Tomato',emoji:'🍅',growTime:16,reward:10,price:6},
-      sunflower: {name:'Sunflower',emoji:'🌻',growTime:28,reward:26,price:18}
-    };
-
-    // --- Init ---
-    const grid = document.getElementById('grid');
-    const coinsEl = document.getElementById('coins');
-    const seedListEl = document.getElementById('seedList');
-    const msg = document.getElementById('msg');
-    const occupiedEl = document.getElementById('occupied');
-    const dayEl = document.getElementById('day');
-    const dayProgress = document.getElementById('dayProgress');
-
-    function makePlots(n){
-      state.plotsState = [];
-      grid.innerHTML = '';
-      for(let i=0;i<n;i++){
-        const div = document.createElement('div'); div.className='plot';
-        div.dataset.index=i;
-        div.innerHTML = `<div class="soil"><div class="plant stage-0" data-stage="0"></div></div>`;
-        grid.appendChild(div);
-        state.plotsState.push({seed:null,progress:0,watered:false,stage:0,dead:false});
-        div.addEventListener('click', ()=>onPlotClick(i));
-      }
-      updateOccupied();
-    }
-
-    function updateOccupied(){
-      const occ = state.plotsState.filter(p=>p.seed && !p.dead).length;
-      occupiedEl.textContent = `${occ}/${state.plotsState.length}`;
-    }
-
-    function renderSeeds(){
-      seedListEl.innerHTML='';
-      for(const id of Object.keys(SEEDS)){
-        const s = SEEDS[id];
-        const li = document.createElement('div'); li.className='seed';
-        li.innerHTML = `<div><strong>${s.emoji} ${s.name}</strong><div style="font-size:12px;color:#666">Grow: ${s.growTime}s • Reward: ${s.reward}</div></div>`;
-        const btn = document.createElement('button'); btn.textContent = `Plant (${state.seedsOwned[id]||0})`;
-        btn.disabled = (state.seedsOwned[id]||0) <= 0;
-        btn.addEventListener('click', ()=>selectSeed(id));
-        li.appendChild(btn);
-        seedListEl.appendChild(li);
-      }
-    }
-
-    let selectedSeed = null;
-    function selectSeed(id){
-      selectedSeed = id; msg.textContent = `Selected ${SEEDS[id].name}. Click a plot to plant.`;
-    }
-
-    function onPlotClick(i){
-      const p = state.plotsState[i];
-      if(selectedSeed){
-        if(p.seed && !p.dead){ msg.textContent='Plot already has a plant.'; return; }
-        if((state.seedsOwned[selectedSeed]||0) <= 0){ msg.textContent='You have no seeds of that type.'; return; }
-        p.seed = selectedSeed; p.progress = 0; p.stage = 1; p.dead=false; p.watered=false;
-        state.seedsOwned[selectedSeed] -= 1; selectedSeed = null; msg.textContent='Planted!';
-        renderPlot(i); renderSeeds(); updateOccupied();
-      } else {
-        // interact
-        if(!p.seed){ msg.textContent='No plant here — select a seed to plant.'; return; }
-        // if mature -> harvest
-        if(p.stage>=3){ harvestPlot(i); }
-        else { msg.textContent='Plant is still growing. Try watering it.' }
-      }
-    }
-
-    function renderPlot(i){
-      const el = grid.children[i];
-      const plantEl = el.querySelector('.plant');
-      const p = state.plotsState[i];
-      if(!p.seed){ plantEl.className='plant stage-0'; plantEl.textContent=''; return; }
-      const def = SEEDS[p.seed];
-      plantEl.textContent = def.emoji;
-      plantEl.className = `plant stage-${p.stage}`;
-      if(p.dead){ plantEl.textContent = '☠️'; plantEl.className='plant stage-3'; }
-    }
-
-    function tick(dt=1){
-      // advance day
-      state.dayTick += dt;
-      if(state.dayTick >= 100){ state.day++; state.dayTick = 0; }
-      dayEl.textContent = state.day;
-      dayProgress.style.width = Math.min(state.dayTick,100) + '%';
-
-      // advance plants
-      for(let i=0;i<state.plotsState.length;i++){
-        const p = state.plotsState[i];
-        if(!p.seed || p.dead) continue;
-        const base = SEEDS[p.seed].growTime; // seconds
-        // growth speed influenced by watering & upgrade
-        const speed = (1 + (p.watered?1:0)) * (1 + (state.upgrades.waterBoost-1));
-        p.progress += (dt/1.5) * (1/speed); // scale to make fun
-        // update stage thresholds
-        const perc = p.progress / base;
-        if(perc >= 1.0){ p.stage = 3; }
-        else if(perc >= 0.6) p.stage = 2;
-        else p.stage = 1;
-        // chance to die if not watered for long
-        if(!p.watered && p.progress > base*0.9){ if(Math.random() < 0.02) p.dead = true; }
-        renderPlot(i);
-      }
-    }
-
-    function waterAll(){
-      let watered = 0;
-      for(const p of state.plotsState){ if(p.seed && !p.dead){ p.watered = true; watered++; }}
-      msg.textContent = `Watered ${watered} plants.`;
-    }
-
-    function harvestPlot(i){
-      const p = state.plotsState[i];
-      if(!p.seed || p.dead) return msg.textContent='Nothing to harvest.';
-      if(p.stage < 3) return msg.textContent='Not ready yet.';
-      const def = SEEDS[p.seed];
-      state.coins += def.reward;
-      p.seed = null; p.progress = 0; p.stage = 0; p.watered = false; p.dead=false;
-      renderPlot(i); updateCoins(); updateOccupied(); msg.textContent = `Harvested ${def.name} +${def.reward} coins`;
-    }
-
-    function harvestAll(){
-      let total=0; for(let i=0;i<state.plotsState.length;i++){
-        const p = state.plotsState[i]; if(p.seed && !p.dead && p.stage>=3){ total += SEEDS[p.seed].reward; p.seed=null; p.progress=0; p.stage=0; p.watered=false; p.dead=false; renderPlot(i);} }
-      state.coins += total; updateCoins(); msg.textContent = `Harvested all mature plants (+${total} coins)`;
-      updateOccupied();
-    }
-
-    function clearDead(){
-      let count=0; for(const p of state.plotsState){ if(p.dead){ p.seed=null; p.dead=false; p.progress=0; p.stage=0; count++; }}
-      msg.textContent = `Cleared ${count} dead plants.`; updateOccupied();
-    }
-
-    function buyPlot(){ if(state.coins < 10) return msg.textContent='Not enough coins.'; state.coins -= 10; state.plotsState.push({seed:null,progress:0,watered:false,stage:0,dead:false});
-      const div = document.createElement('div'); div.className='plot'; div.dataset.index = state.plotsState.length-1; div.innerHTML = `<div class="soil"><div class="plant stage-0" data-stage="0"></div></div>`;
-      grid.appendChild(div); div.addEventListener('click', ()=>onPlotClick(state.plotsState.length-1)); updateCoins(); updateOccupied(); msg.textContent='Bought 1 plot.';
-    }
-
-    function expandGrid(){ // +5 plots free
-      for(let i=0;i<5;i++){ state.plotsState.push({seed:null,progress:0,watered:false,stage:0,dead:false}); const div = document.createElement('div'); div.className='plot'; div.dataset.index = state.plotsState.length-1; div.innerHTML = `<div class="soil"><div class="plant stage-0" data-stage="0"></div></div>`; grid.appendChild(div); div.addEventListener('click', ()=>onPlotClick(state.plotsState.length-1)); }
-      msg.textContent='Expanded garden by 5 plots.'; updateOccupied();
-    }
-
-    function updateCoins(){ coinsEl.textContent = state.coins; }
-
-    function buySeed(id){ const s = SEEDS[id]; if(state.coins < s.price) return msg.textContent='Not enough coins.'; state.coins -= s.price; state.seedsOwned[id] = (state.seedsOwned[id]||0) + 1; updateCoins(); renderSeeds(); msg.textContent = `Bought 1 ${s.name} seed.`; }
-
-    function renderShop(){
-      const shop = document.getElementById('shop'); shop.innerHTML = '';
-      for(const id of Object.keys(SEEDS)){
-        const item = document.createElement('div'); item.className='shop-item';
-        item.innerHTML = `<div>${SEEDS[id].emoji} ${SEEDS[id].name} • ${SEEDS[id].price} coins</div>`;
-        const btn = document.createElement('button'); btn.textContent='Buy'; btn.className='small'; btn.addEventListener('click', ()=>buySeed(id));
-        item.appendChild(btn); shop.appendChild(item);
-      }
-      // an upgrade
-      const up = document.createElement('div'); up.className='shop-item'; up.innerHTML = `<div>Watering Can Upgrade (reduce grow time) • 40 coins</div>`;
-      const upBtn = document.createElement('button'); upBtn.className='small'; upBtn.textContent='Buy'; upBtn.addEventListener('click', ()=>{ if(state.coins<40) return msg.textContent='Not enough coins.'; state.coins -= 40; state.upgrades.waterBoost += 0.5; updateCoins(); msg.textContent='Upgraded watering!'; }); up.appendChild(upBtn); shop.appendChild(up);
-    }
-
-    // --- Save/load ---
-    function saveGame(){ localStorage.setItem('gardenSave', JSON.stringify(state)); msg.textContent='Saved.' }
-    function loadGame(){ const s = localStorage.getItem('gardenSave'); if(!s) return msg.textContent='No save found.'; const obj = JSON.parse(s); Object.assign(state,obj); renderAll(); msg.textContent='Loaded save.' }
-    function resetGame(){ if(!confirm('Reset progress?')) return; localStorage.removeItem('gardenSave'); location.reload(); }
-
-    function renderAll(){ updateCoins(); renderSeeds(); renderShop(); makePlots(state.plotsState.length || state.gridCount); // then copy old plots into new
-      // copy existing plotsState data if any
-      const old = state.plotsState.slice(0);
-      for(let i=0;i<old.length;i++){ state.plotsState[i] = old[i]; renderPlot(i); }
-      updateOccupied(); dayEl.textContent = state.day; }
-
-    // --- Wire buttons ---
-    document.getElementById('waterBtn').addEventListener('click', ()=>{ waterAll(); });
-    document.getElementById('harvestAll').addEventListener('click', harvestAll);
-    document.getElementById('clearAll').addEventListener('click', clearDead);
-    document.getElementById('buyPlot').addEventListener('click', buyPlot);
-    document.getElementById('expandGrid').addEventListener('click', expandGrid);
-    document.getElementById('saveBtn').addEventListener('click', saveGame);
-    document.getElementById('loadBtn').addEventListener('click', loadGame);
-    document.getElementById('resetBtn').addEventListener('click', resetGame);
-
-    // initial render
-    updateCoins(); renderSeeds(); renderShop(); makePlots(state.gridCount);
-
-    // a simple loop using setInterval (1 second)
-    setInterval(()=>tick(6), 1000); // accelerate time: each second ~6 units
-
-    // double-click harvesting (optional)
-    grid.addEventListener('dblclick', (e)=>{ const plot = e.target.closest('.plot'); if(!plot) return; const idx = [...grid.children].indexOf(plot); harvestPlot(idx); });
-
-    // save periodically
-    setInterval(()=>saveGame(), 15000);
-  </script>
 </body>
 </html>
